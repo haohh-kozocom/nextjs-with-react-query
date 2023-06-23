@@ -31,3 +31,6 @@ export const addStudent = (
 
 export const updateStudent = (student: Students): Promise<any> =>
   axiosClient.put(`${API_PATH.STUDENTS}/${student.id}`, student);
+
+export const deleteStudent = ({ id }: Students) =>
+  axiosClient.delete<{}>(`${API_PATH.STUDENTS}/${id}`);

@@ -4,14 +4,19 @@ import { getListStudent } from "@/api/students-api";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { LIMIT } from "@/constants/common";
 import { useMemo } from "react";
 import { ROUTE_PATH } from "@/configs/route-path";
+import { useMutateStudent } from "@/hooks";
+import { ACTION } from "@/types/common";
+import { Student, Students } from "@/types/student";
+import { toast } from "react-toastify";
 
 export default function TableStudent() {
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
 
   const page = useMemo(() => {
     const curPage = Number(searchParams.get("page")) || 1;
@@ -30,40 +35,46 @@ export default function TableStudent() {
     return curTotalPage;
   }, [data?.headers]);
 
-  //   const deleteStudentMutation = useMutation({
-  //     mutationFn: (id: number | string) => deleteStudent(id),
-  //     onSuccess: (_, id) => {
-  //       toast.success(`Xóa thành công student với id là ${id}`)
-  //       queryClient.invalidateQueries({ queryKey: ['students', page], exact: true })
-  //     }
-  //   })
-
-  //   const handleDelete = (id: number) => {
-  //     deleteStudentMutation.mutate(id)
-  //   }
-
-  const handlePrefetchStudent = (id: number) => {
-    // queryClient.prefetchQuery(['student', String(id)], {
-    //   queryFn: () => getStudent(id),
-    //   staleTime: 10 * 1000
-    // })
+  const onSuccess = () => {
+    toast.success(`${ACTION.DELETE} student success`);
+    queryClient.invalidateQueries({
+      predicate: (query) => {
+        let pageCompare = JSON.stringify(query?.queryKey[1]);
+        return query.queryKey[0] === "students" && +pageCompare >= +page;
+      },
+    });
   };
 
-  //   const fetchStudent = (second: number) => {
-  //     const id = '6'
-  //     queryClient.prefetchQuery(['student', id], {
-  //       queryFn: () => getStudent(id),
-  //       staleTime: second * 1000
-  //     })
-  //   }
+  const onMutate = (student: Students) => {
+    queryClient.cancelQueries({
+      queryKey: ["students", page],
+    });
 
-  //   const refetchStudents = () => {
-  //     studentsQuery.refetch()
-  //   }
+    // Snapshot the previous value
+    const previousData = queryClient.getQueryData(["students", page]);
+    // Optimistically update to the new value
+    queryClient.setQueryData(["students", page], (old: any) => ({
+      ...old,
+      data: old?.data?.filter((item: any) => item.id !== student.id),
+    }));
+    return { previousData };
+  };
 
-  //   const cancelRequestStudents = () => {
-  //     queryClient.cancelQueries({ queryKey: ['students', page] })
-  //   }
+  const onError = (_error: any, _: any, context: { previousData: unknown }) => {
+    queryClient.setQueryData(["students", page], context?.previousData);
+    toast.error(`${ACTION.DELETE} student error`);
+  };
+
+  const mutation = useMutateStudent({
+    action: ACTION.DELETE,
+    onMutate,
+    onSuccess,
+    onError,
+  });
+
+  const handleDelete = (student: Students) => {
+    mutation.mutate(student);
+  };
 
   return (
     <>
@@ -112,7 +123,6 @@ export default function TableStudent() {
                   <tr
                     key={student.id}
                     className="border-b bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600"
-                    onMouseEnter={() => handlePrefetchStudent(student.id)}
                   >
                     <td className="py-4 px-6">{student.id}</td>
                     <td className="py-4 px-6">
@@ -139,7 +149,7 @@ export default function TableStudent() {
                       </Link>
                       <button
                         className="font-medium text-red-600 dark:text-red-500"
-                        // onClick={() => handleDelete(student.id)}
+                        onClick={() => handleDelete(student as Students)}
                       >
                         Delete
                       </button>

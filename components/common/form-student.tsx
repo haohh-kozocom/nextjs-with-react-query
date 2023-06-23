@@ -7,6 +7,7 @@ import { useMutateStudent, useStudent } from "@/hooks";
 import { ACTION, GENDER_SELECT } from "@/types/common";
 import { Students } from "@/types/student";
 import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 type IFormInput = Students;
 
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export default function FormStudent({ action, idStudent }: Props) {
+  const queryClient = useQueryClient();
   const { register, handleSubmit, reset } = useForm<IFormInput>();
 
   const studentQuery = useStudent(idStudent);
@@ -26,17 +28,21 @@ export default function FormStudent({ action, idStudent }: Props) {
     }
   }, [studentQuery.data, reset]);
 
-  const onSuccessMutate = () => {
+  const onSuccess = (data: any) => {
     toast.success(`${action} student success`);
+    queryClient.invalidateQueries(["students"]);
     if (action === ACTION.ADD) {
       reset();
+    }
+
+    if (action === ACTION.EDIT) {
+      queryClient.setQueryData(["student", idStudent], data);
     }
   };
 
   const mutation = useMutateStudent({
     action,
-    onSuccess: onSuccessMutate,
-    idStudent,
+    onSuccess,
   });
 
   const onSubmit: SubmitHandler<IFormInput> = (data) => {

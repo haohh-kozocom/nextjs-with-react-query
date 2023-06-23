@@ -1,6 +1,7 @@
 export enum ACTION {
   ADD = "Add",
   EDIT = "Edit",
+  DELETE = "Delete",
 }
 
 export enum GENDER {
