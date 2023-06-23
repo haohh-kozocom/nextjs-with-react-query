@@ -3,18 +3,28 @@
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
-import { useMutateStudent } from "@/hooks/useMutateStudent";
+import { useMutateStudent, useStudent } from "@/hooks";
 import { ACTION, GENDER_SELECT } from "@/types/common";
 import { Students } from "@/types/student";
+import { useEffect } from "react";
 
 type IFormInput = Students;
 
 type Props = {
   action: ACTION;
+  idStudent?: string;
 };
 
-export default function FormStudent({ action }: Props) {
+export default function FormStudent({ action, idStudent }: Props) {
   const { register, handleSubmit, reset } = useForm<IFormInput>();
+
+  const studentQuery = useStudent(idStudent);
+
+  useEffect(() => {
+    if (studentQuery.data) {
+      reset(studentQuery.data.data);
+    }
+  }, [studentQuery.data, reset]);
 
   const onSuccessMutate = () => {
     toast.success(`${action} student success`);
@@ -23,7 +33,11 @@ export default function FormStudent({ action }: Props) {
     }
   };
 
-  const mutation = useMutateStudent({ action, onSuccess: onSuccessMutate });
+  const mutation = useMutateStudent({
+    action,
+    onSuccess: onSuccessMutate,
+    idStudent,
+  });
 
   const onSubmit: SubmitHandler<IFormInput> = (data) => {
     mutation.mutate(data);
@@ -50,7 +64,6 @@ export default function FormStudent({ action }: Props) {
             Email address
           </label>
         </div>
-
         <div className="group relative z-0 mb-6 w-full">
           {GENDER_SELECT.map((gender) => (
             <div className="mb-4 flex items-center" key={gender.key}>

@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { LIMIT } from "@/constants/common";
 import { useMemo } from "react";
+import { ROUTE_PATH } from "@/configs/route-path";
 
 export default function TableStudent() {
   const searchParams = useSearchParams();
@@ -19,7 +20,7 @@ export default function TableStudent() {
 
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ["students", page],
-    queryFn: () => getListStudent(page),
+    queryFn: getListStudent,
     keepPreviousData: true,
   });
 
@@ -131,7 +132,7 @@ export default function TableStudent() {
                     <td className="py-4 px-6">{student.email}</td>
                     <td className="py-4 px-6 text-right">
                       <Link
-                        href={`/students/${student.id}`}
+                        href={`${ROUTE_PATH.EDIT_STUDENT}/${student.id}`}
                         className="mr-5 font-medium text-blue-600 hover:underline dark:text-blue-500"
                       >
                         Edit

@@ -1,24 +1,31 @@
 export enum ACTION {
-  ADD = "add",
-  EDIT = "edit",
+  ADD = "Add",
+  EDIT = "Edit",
 }
 
 export enum GENDER {
-  famale = "famale",
-  male = "male",
+  female = "Female",
+  male = "Male",
+  other = "Agender",
 }
 
 export const GENDER_SELECT = [
   {
     key: "gender-1",
-    value: GENDER.famale,
-    label: "Famale",
-    id: "feild-famale",
+    value: GENDER.female,
+    label: "Female",
+    id: "feild-female",
   },
   {
     key: "gender-2",
     value: GENDER.male,
     label: "Male",
     id: "feild-male",
+  },
+  {
+    key: "gender-3",
+    value: GENDER.other,
+    label: "Other",
+    id: "feild-other",
   },
 ];

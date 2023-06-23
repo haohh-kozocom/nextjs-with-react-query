@@ -4,29 +4,30 @@ import { Student, Students } from "@/types/student";
 import axiosClient from "@/utils/axiosClient";
 import { AxiosResponse } from "axios";
 
-export const getListStudent = (
-  page: string | number
-): Promise<AxiosResponse<Student[]>> => {
+type PropsQuery = {
+  queryKey: (string | number | undefined)[];
+};
+
+export const getListStudent = ({
+  queryKey,
+}: PropsQuery): Promise<AxiosResponse<Student[]>> => {
   return axiosClient.get(API_PATH.STUDENTS, {
     params: {
-      _page: page,
+      _page: queryKey?.[1],
       _limit: LIMIT,
     },
   });
 };
 
-export const addStudent = (student: Students): Promise<any> =>
+export const getStudent = ({
+  queryKey,
+}: PropsQuery): Promise<AxiosResponse<Students>> =>
+  axiosClient.get(`${API_PATH.STUDENTS}/${queryKey?.[1]}`);
+
+export const addStudent = (
+  student: Students
+): Promise<AxiosResponse<Students>> =>
   axiosClient.post(API_PATH.STUDENTS, student);
 
-export const updateStudent = (student: Students): Promise<any> => {
-  return axiosClient.get(API_PATH.STUDENTS, {
-    params: {
-      _limit: LIMIT,
-    },
-  });
-};
-
-// export const updateStudent = (
-//   id: number | string,
-//   student: Students
-// ): Promise<any> => axiosClient.put(`${API_PATH.STUDENTS}/${id}`, student);
+export const updateStudent = (student: Students): Promise<any> =>
+  axiosClient.put(`${API_PATH.STUDENTS}/${student.id}`, student);
