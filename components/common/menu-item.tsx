@@ -1,5 +1,6 @@
 "use client";
 
+import { ROUTE_PATH } from "@/configs/route-path";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -15,8 +16,13 @@ interface Props {
 
 export default function MenuItem({ item }: Props) {
   const pathname = usePathname();
-  const isActive = pathname === item.to;
-
+  let isActive = pathname === item.to;
+  if (
+    pathname.includes(ROUTE_PATH.STUDENT) &&
+    item.to.includes(ROUTE_PATH.STUDENT)
+  ) {
+    isActive = true;
+  }
   return (
     <li>
       <Link href={item.to}>
