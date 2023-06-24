@@ -8,14 +8,16 @@ type PropsQuery = {
   queryKey: (string | number | undefined)[];
 };
 
-export const getListStudent = ({
-  queryKey,
-}: PropsQuery): Promise<AxiosResponse<Student[]>> => {
+export const getListStudent = (
+  page: number,
+  signal: AbortSignal
+): Promise<AxiosResponse<Student[]>> => {
   return axiosClient.get(API_PATH.STUDENTS, {
     params: {
-      _page: queryKey?.[1],
+      _page: page,
       _limit: LIMIT,
     },
+    signal,
   });
 };
 

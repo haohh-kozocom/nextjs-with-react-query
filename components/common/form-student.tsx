@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
@@ -8,6 +10,9 @@ import { ACTION, GENDER_SELECT } from "@/types/common";
 import { Students } from "@/types/student";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import Skeleton from "../ui/skeleton";
+import axios, { AxiosError } from "axios";
+import axiosClient from "@/utils/axiosClient";
 
 type IFormInput = Students;
 
@@ -17,6 +22,7 @@ type Props = {
 };
 
 export default function FormStudent({ action, idStudent }: Props) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { register, handleSubmit, reset } = useForm<IFormInput>();
 
@@ -40,9 +46,16 @@ export default function FormStudent({ action, idStudent }: Props) {
     }
   };
 
+  const onError = (error: Error | AxiosError) => {
+    if (axios.isAxiosError(error) && error.response?.status === 422) {
+      toast.error(error.response?.data.error.email);
+    }
+  };
+
   const mutation = useMutateStudent({
     action,
     onSuccess,
+    onError,
   });
 
   const onSubmit: SubmitHandler<IFormInput> = (data) => {
@@ -51,116 +64,128 @@ export default function FormStudent({ action, idStudent }: Props) {
 
   return (
     <div>
+      <span
+        className="text-gray-500 mb-4 cursor-pointer hover:underline inline-block"
+        onClick={() => router.back()}
+      >
+        Back
+      </span>
       <h1 className="text-lg">
         {action === ACTION.ADD ? "Add" : "Edit"} Student
       </h1>
       <form className="mt-6" onSubmit={handleSubmit(onSubmit)}>
-        <div className="group relative z-0 mb-6 w-full">
-          <input
-            {...register("email", { required: true })}
-            className="peer block w-full appearance-none border-0 border-b-2 border-gray-300 bg-transparent py-2.5 px-0 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0 dark:border-gray-600 dark:text-white dark:focus:border-blue-500"
-            placeholder=" "
-            id="floating_email"
-            type="email"
-          />
-          <label
-            htmlFor="floating_email"
-            className="absolute top-3 -z-10 origin-[0] -translate-y-6 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:left-0 peer-focus:-translate-y-6 peer-focus:scale-75 peer-focus:font-medium peer-focus:text-blue-600 dark:text-gray-400 peer-focus:dark:text-blue-500"
-          >
-            Email address
-          </label>
-        </div>
-        <div className="group relative z-0 mb-6 w-full">
-          {GENDER_SELECT.map((gender) => (
-            <div className="mb-4 flex items-center" key={gender.key}>
-              <label htmlFor={gender.id}>
-                <input
-                  {...register("gender")}
-                  type="radio"
-                  value={gender.value}
-                  id={gender.id}
-                  className="mr-2"
-                  required
-                />
-                {gender.label}
+        {studentQuery.isFetching ? (
+          <Skeleton />
+        ) : (
+          <>
+            <div className="group relative z-0 mb-6 w-full">
+              <input
+                {...register("email", { required: true })}
+                className="peer block w-full appearance-none border-0 border-b-2 border-gray-300 bg-transparent py-2.5 px-0 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0 dark:border-gray-600 dark:text-white dark:focus:border-blue-500"
+                placeholder=" "
+                id="floating_email"
+                // type="email"
+              />
+              <label
+                htmlFor="floating_email"
+                className="absolute top-3 -z-10 origin-[0] -translate-y-6 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:left-0 peer-focus:-translate-y-6 peer-focus:scale-75 peer-focus:font-medium peer-focus:text-blue-600 dark:text-gray-400 peer-focus:dark:text-blue-500"
+              >
+                Email address
               </label>
             </div>
-          ))}
-        </div>
-        <div className="group relative z-0 mb-6 w-full">
-          <input
-            id="floating_country"
-            className="peer block w-full appearance-none border-0 border-b-2 border-gray-300 bg-transparent py-2.5 px-0 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0 dark:border-gray-600 dark:text-white dark:focus:border-blue-500"
-            placeholder=" "
-            {...register("country")}
-          />
-          <label
-            htmlFor="floating_country"
-            className="absolute top-3 -z-10 origin-[0] -translate-y-6 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:left-0 peer-focus:-translate-y-6 peer-focus:scale-75 peer-focus:font-medium peer-focus:text-blue-600 dark:text-gray-400 peer-focus:dark:text-blue-500"
-          >
-            Country
-          </label>
-        </div>
-        <div className="grid md:grid-cols-2 md:gap-6">
-          <div className="group relative z-0 mb-6 w-full">
-            <input
-              id="floating_first_name"
-              className="peer block w-full appearance-none border-0 border-b-2 border-gray-300 bg-transparent py-2.5 px-0 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0 dark:border-gray-600 dark:text-white dark:focus:border-blue-500"
-              placeholder=" "
-              {...register("first_name", { required: true })}
-            />
-            <label
-              htmlFor="floating_first_name"
-              className="absolute top-3 -z-10 origin-[0] -translate-y-6 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:left-0 peer-focus:-translate-y-6 peer-focus:scale-75 peer-focus:font-medium peer-focus:text-blue-600 dark:text-gray-400 peer-focus:dark:text-blue-500"
-            >
-              First name
-            </label>
-          </div>
-          <div className="group relative z-0 mb-6 w-full">
-            <input
-              id="floating_last_name"
-              className="peer block w-full appearance-none border-0 border-b-2 border-gray-300 bg-transparent py-2.5 px-0 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0 dark:border-gray-600 dark:text-white dark:focus:border-blue-500"
-              placeholder=" "
-              {...register("last_name", { required: true })}
-            />
-            <label
-              htmlFor="floating_last_name"
-              className="absolute top-3 -z-10 origin-[0] -translate-y-6 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:left-0 peer-focus:-translate-y-6 peer-focus:scale-75 peer-focus:font-medium peer-focus:text-blue-600 dark:text-gray-400 peer-focus:dark:text-blue-500"
-            >
-              Last name
-            </label>
-          </div>
-        </div>
-        <div className="grid md:grid-cols-2 md:gap-6">
-          <div className="group relative z-0 mb-6 w-full">
-            <input
-              id="floating_avatar"
-              className="peer block w-full appearance-none border-0 border-b-2 border-gray-300 bg-transparent py-2.5 px-0 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0 dark:border-gray-600 dark:text-white dark:focus:border-blue-500"
-              placeholder=" "
-              {...register("avatar", { required: true })}
-            />
-            <label
-              htmlFor="floating_avatar"
-              className="absolute top-3 -z-10 origin-[0] -translate-y-6 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:left-0 peer-focus:-translate-y-6 peer-focus:scale-75 peer-focus:font-medium peer-focus:text-blue-600 dark:text-gray-400 peer-focus:dark:text-blue-500"
-            >
-              Avatar
-            </label>
-          </div>
-          <div className="group relative z-0 mb-6 w-full">
-            <input
-              id="floating_btc_address"
-              className="peer block w-full appearance-none border-0 border-b-2 border-gray-300 bg-transparent py-2.5 px-0 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0 dark:border-gray-600 dark:text-white dark:focus:border-blue-500"
-              placeholder=" "
-              {...register("btc_address")}
-            />
-            <label
-              htmlFor="floating_btc_address"
-              className="absolute top-3 -z-10 origin-[0] -translate-y-6 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:left-0 peer-focus:-translate-y-6 peer-focus:scale-75 peer-focus:font-medium peer-focus:text-blue-600 peer-focus:dark:text-blue-500"
-            >
-              BTC Address
-            </label>
-          </div>
-        </div>
+            <div className="group relative z-0 mb-6 w-full">
+              {GENDER_SELECT.map((gender) => (
+                <div className="mb-4 flex items-center" key={gender.key}>
+                  <label htmlFor={gender.id}>
+                    <input
+                      {...register("gender")}
+                      type="radio"
+                      value={gender.value}
+                      id={gender.id}
+                      className="mr-2"
+                      required
+                    />
+                    {gender.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+            <div className="group relative z-0 mb-6 w-full">
+              <input
+                id="floating_country"
+                className="peer block w-full appearance-none border-0 border-b-2 border-gray-300 bg-transparent py-2.5 px-0 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0 dark:border-gray-600 dark:text-white dark:focus:border-blue-500"
+                placeholder=" "
+                {...register("country")}
+              />
+              <label
+                htmlFor="floating_country"
+                className="absolute top-3 -z-10 origin-[0] -translate-y-6 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:left-0 peer-focus:-translate-y-6 peer-focus:scale-75 peer-focus:font-medium peer-focus:text-blue-600 dark:text-gray-400 peer-focus:dark:text-blue-500"
+              >
+                Country
+              </label>
+            </div>
+            <div className="grid md:grid-cols-2 md:gap-6">
+              <div className="group relative z-0 mb-6 w-full">
+                <input
+                  id="floating_first_name"
+                  className="peer block w-full appearance-none border-0 border-b-2 border-gray-300 bg-transparent py-2.5 px-0 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0 dark:border-gray-600 dark:text-white dark:focus:border-blue-500"
+                  placeholder=" "
+                  {...register("first_name", { required: true })}
+                />
+                <label
+                  htmlFor="floating_first_name"
+                  className="absolute top-3 -z-10 origin-[0] -translate-y-6 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:left-0 peer-focus:-translate-y-6 peer-focus:scale-75 peer-focus:font-medium peer-focus:text-blue-600 dark:text-gray-400 peer-focus:dark:text-blue-500"
+                >
+                  First name
+                </label>
+              </div>
+              <div className="group relative z-0 mb-6 w-full">
+                <input
+                  id="floating_last_name"
+                  className="peer block w-full appearance-none border-0 border-b-2 border-gray-300 bg-transparent py-2.5 px-0 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0 dark:border-gray-600 dark:text-white dark:focus:border-blue-500"
+                  placeholder=" "
+                  {...register("last_name", { required: true })}
+                />
+                <label
+                  htmlFor="floating_last_name"
+                  className="absolute top-3 -z-10 origin-[0] -translate-y-6 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:left-0 peer-focus:-translate-y-6 peer-focus:scale-75 peer-focus:font-medium peer-focus:text-blue-600 dark:text-gray-400 peer-focus:dark:text-blue-500"
+                >
+                  Last name
+                </label>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 md:gap-6">
+              <div className="group relative z-0 mb-6 w-full">
+                <input
+                  id="floating_avatar"
+                  className="peer block w-full appearance-none border-0 border-b-2 border-gray-300 bg-transparent py-2.5 px-0 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0 dark:border-gray-600 dark:text-white dark:focus:border-blue-500"
+                  placeholder=" "
+                  {...register("avatar", { required: true })}
+                />
+                <label
+                  htmlFor="floating_avatar"
+                  className="absolute top-3 -z-10 origin-[0] -translate-y-6 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:left-0 peer-focus:-translate-y-6 peer-focus:scale-75 peer-focus:font-medium peer-focus:text-blue-600 dark:text-gray-400 peer-focus:dark:text-blue-500"
+                >
+                  Avatar
+                </label>
+              </div>
+              <div className="group relative z-0 mb-6 w-full">
+                <input
+                  id="floating_btc_address"
+                  className="peer block w-full appearance-none border-0 border-b-2 border-gray-300 bg-transparent py-2.5 px-0 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0 dark:border-gray-600 dark:text-white dark:focus:border-blue-500"
+                  placeholder=" "
+                  {...register("btc_address")}
+                />
+                <label
+                  htmlFor="floating_btc_address"
+                  className="absolute top-3 -z-10 origin-[0] -translate-y-6 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:left-0 peer-focus:-translate-y-6 peer-focus:scale-75 peer-focus:font-medium peer-focus:text-blue-600 peer-focus:dark:text-blue-500"
+                >
+                  BTC Address
+                </label>
+              </div>
+            </div>
+          </>
+        )}
 
         <button
           disabled={mutation.isLoading}
