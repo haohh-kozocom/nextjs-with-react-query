@@ -126,6 +126,12 @@ export default function TableStudent() {
                     <td className="py-4 px-6">{student.email}</td>
                     <td className="py-4 px-6 text-right">
                       <Link
+                        href={`${ROUTE_PATH.READ_STUDENT}/${student.id}`}
+                        className="mr-5 font-medium text-green-500 hover:underline dark:text-blue-500"
+                      >
+                        Read
+                      </Link>
+                      <Link
                         href={`${ROUTE_PATH.EDIT_STUDENT}/${student.id}`}
                         className="mr-5 font-medium text-blue-600 hover:underline dark:text-blue-500"
                       >
